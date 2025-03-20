@@ -2,7 +2,7 @@
 import os
 
 from flask import Blueprint, jsonify, request
-from services.asl_service import ASLService
+from backend.python.src.services.ml.asl_service import ASLService
 
 # Get model path from environment variable or use default
 model_path = os.environ.get("ASL_MODEL_PATH", "models/asl_model.pt")

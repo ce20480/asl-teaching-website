@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  express:
+    build: ./backend/express
+    ports:
+      - "3000:3000"
+    environment:
+      - PYTHON_API=http://python:8000
+    depends_on:
+      - python
+
+  python:
+    build: ./backend/python
+    ports:
+      - "8000:8000"
+    environment:
+      - AKAVE_PRIVATE_KEY_PATH=/keys/user.akvf.key
+      - AKAVE_NODE_ADDRESS=connect.akave.ai:5500
+      - LILYPAD_API_KEY=${LILYPAD_API_KEY}
+    volumes:
+      - ~/.key:/keys
