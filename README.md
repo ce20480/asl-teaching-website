@@ -1,7 +1,5 @@
 # ASL Teaching Website
 
-An interactive web application for learning American Sign Language (ASL) through real-time translation, interactive lessons, and community contributions.
-
 SignLang: Empowering Accessibility through Open-Source and Decentralization
 
 Every day, millions rely on sign language to communicate—but access to high-quality sign language translation remains limited, expensive, and monopolized by big tech. Current solutions are often inaccessible due to high costs, limited availability, and proprietary restrictions, creating significant barriers in critical areas such as healthcare, education, and everyday interactions.
