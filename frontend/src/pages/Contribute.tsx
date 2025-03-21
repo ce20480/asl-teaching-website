@@ -1,44 +1,60 @@
 import { useState } from "react";
-import { Upload, FileUp } from "lucide-react";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { FileUpload } from "@/components/features/upload/FileUpload";
+import { storageService } from "@/services/api";
+import { ApiError } from "@/services/api/base";
 import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
 
 export default function Contribute() {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
-  const handleFileUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleFileSelect = (file: File) => {
+    setSelectedFile(file);
+  };
 
-    const formData = new FormData();
-    formData.append("file", file);
+  const handleUpload = async () => {
+    if (!selectedFile) return;
 
     try {
       setIsUploading(true);
-      const response = await fetch("http://localhost:8000/api/storage/upload", {
-        method: "POST",
-        body: formData,
-      });
+      setUploadProgress(0);
 
-      if (!response.ok) {
-        throw new Error("Upload failed");
-      }
+      const result = await storageService.uploadFile(
+        selectedFile,
+        (progress) => {
+          setUploadProgress(progress);
+        }
+      );
 
-      await response.json();
-      toast.success("File uploaded successfully to Akave storage");
+      console.log("Upload successful:", result);
+      toast.success("File successfully uploaded to Filecoin network!");
+      setSelectedFile(null);
     } catch (error) {
-      console.error("Upload failed:", error);
-      toast.error("Failed to upload file");
+      console.error("Upload error details:", error);
+
+      if (error instanceof ApiError) {
+        toast.error(error.message);
+      } else {
+        toast.error("Unexpected error during upload");
+      }
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6 p-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Contribute</h1>
         <p className="text-muted-foreground mt-2">
@@ -49,24 +65,35 @@ export default function Contribute() {
       <Card>
         <CardHeader>
           <CardTitle>Upload Sign Language Data</CardTitle>
+          <CardDescription>
+            Upload images or videos of sign language gestures to help train our
+            model
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center p-8 border-2 border-dashed rounded-lg">
-            <Upload className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-sm text-muted-foreground mb-4">
-              Drag and drop your files here, or click to select files
-            </p>
-            <Button disabled={isUploading}>
-              <FileUp className="mr-2 h-4 w-4" />
-              {isUploading ? "Uploading..." : "Choose File"}
-              <input
-                type="file"
-                className="hidden"
-                onChange={handleFileUpload}
-                accept="image/*,video/*"
-              />
-            </Button>
-          </div>
+        <CardContent className="space-y-4">
+          <FileUpload
+            onFileSelect={handleFileSelect}
+            onRemove={() => setSelectedFile(null)}
+            accept="image/*,video/*"
+            maxSize={10 * 1024 * 1024} // 10MB
+          />
+
+          {selectedFile && (
+            <div className="space-y-4">
+              {isUploading && (
+                <Progress value={uploadProgress} className="w-full" />
+              )}
+              <Button
+                onClick={handleUpload}
+                disabled={isUploading}
+                className="w-full"
+              >
+                {isUploading
+                  ? "Uploading to Filecoin..."
+                  : "Upload to Filecoin"}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

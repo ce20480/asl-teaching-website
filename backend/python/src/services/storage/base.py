@@ -9,3 +9,7 @@ class StorageProvider(ABC):
     @abstractmethod
     async def list_files(self, bucket_name: str) -> list[str]:
         pass
+
+    @abstractmethod
+    async def download_file(self, bucket_name: str, file_name: str, destination: str) -> str:
+        pass

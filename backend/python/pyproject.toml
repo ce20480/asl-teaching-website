@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "asl-teaching-backend"
+version = "0.1.0"
+description = "ASL Teaching Website Backend"
+authors = ["Your Name"]
+readme = "README.md"
+packages = [
+    { include = "src" },
+    { include = "scripts" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.109.2"
+uvicorn = {extras = ["standard"], version = "^0.27.1"}
+python-multipart = "^0.0.9"
+pydantic = "^2.6.1"
+pydantic-settings = "^2.1.0"
+python-dotenv = "^1.0.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+black = "^24.1.1"
+isort = "^5.13.2"
+
+[tool.poetry.scripts]
+dev = "scripts.dev:main"
+start = "uvicorn src.main:app"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

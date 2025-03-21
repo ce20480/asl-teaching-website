@@ -6,10 +6,10 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 class AkaveStorageService(StorageProvider):
-    def __init__(self, private_key_path: str, node_address: str, default_bucket: str):
-        if Path(private_key_path).is_file():
-            self.private_key = self._load_private_key(private_key_path)
-        self.private_key = private_key_path
+    def __init__(self, private_key: str, node_address: str, default_bucket: str):
+        # if Path(private_key_path).is_file():
+        #     self.private_key = self._load_private_key(private_key_path)
+        self.private_key = private_key
         self.node_address = node_address
         self.default_bucket = default_bucket
         self._ensure_bucket_exists()

@@ -1,54 +1,47 @@
-# React + TypeScript + Vite
+# ASL Teaching Website Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Overview
 
-Currently, two official plugins are available:
+React-based frontend for ASL teaching platform with real-time sign language detection and storage capabilities.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Setup
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Development
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- Frontend runs on port 5173 or 5174 (Vite default)
+- Configuration in `src/config.ts` for API endpoints
+- Uses shadcn/ui for components
+- Implements file upload with preview functionality
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+## Key Features
+
+- Real-time sign language detection interface
+- File upload with preview
+- Connection to Express middleware server
+- Filecoin storage integration
+
+## Common Issues
+
+1. CORS errors when connecting directly to Python backend
+   - Always route through Express middleware (port 3000)
+2. File upload size limits
+   - Configure in both frontend and backend
+3. Environment variables
+   - Check `.env` for API endpoints
+
+## Project Structure
+
+```
+src/
+├── components/
+│   ├── features/    # Feature-specific components
+│   └── ui/         # Reusable UI components
+├── services/
+│   └── api/        # API integration
+└── pages/          # Route components
 ```
