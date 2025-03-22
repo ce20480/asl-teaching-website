@@ -2,19 +2,21 @@
 name = "asl-teaching-backend"
 version = "0.1.0"
 description = "ASL Teaching Website Backend"
-authors = ["Your Name"]
+authors = ["Your Name <your.email@example.com>"]
 readme = "README.md"
 packages = [
     { include = "src" },
     { include = "scripts" }
 ]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
-fastapi = "^0.109.2"
-uvicorn = {extras = ["standard"], version = "^0.27.1"}
-python-multipart = "^0.0.9"
-pydantic = "^2.6.1"
+fastapi = "^0.104.1"
+uvicorn = "^0.24.0"
+python-multipart = "^0.0.6"
+httpx = "^0.25.1"
+pydantic = "^2.5.1"
 pydantic-settings = "^2.1.0"
 python-dotenv = "^1.0.1"
 
@@ -28,5 +30,5 @@ dev = "scripts.dev:main"
 start = "uvicorn src.main:app"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

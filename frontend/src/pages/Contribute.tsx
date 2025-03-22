@@ -37,7 +37,7 @@ export default function Contribute() {
       );
 
       console.log("Upload successful:", result);
-      toast.success("File successfully uploaded to Filecoin network!");
+      toast.success(`File uploaded successfully! Available at ${result.data.url}`);
       setSelectedFile(null);
     } catch (error) {
       console.error("Upload error details:", error);

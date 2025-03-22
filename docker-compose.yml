@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  express:
+    build: ./backend/express
+    ports:
+      - "3000:3000"
+    environment:
+      - PYTHON_API=http://python:8000
+    depends_on:
+      - python
+      - akavelink
+
+  python:
+    build: ./backend/python
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ADDRESS=connect.akave.ai:5500
+      - WEB3_PRIVATE_KEY=Buffer.from(${PRIVATE_KEY}, 'hex')
+      - AUTH_PRIVATE_KEY=Buffer.from(${PRIVATE_KEY}, 'hex')
+    volumes:
+      - ~/.key:/keys
+    depends_on:
+      - akavelink
+
+  akavelink:
+    image: akave/akavelink:latest
+    ports:
+      - "8080:3000"
+    environment:
+      - NODE_ADDRESS=connect.akave.ai:5500
+      - WEB3_PRIVATE_KEY=Buffer.from(${PRIVATE_KEY}, 'hex')
+      - AUTH_PRIVATE_KEY=Buffer.from(${PRIVATE_KEY}, 'hex')

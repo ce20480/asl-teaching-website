@@ -7,8 +7,13 @@ export interface ApiResponse<T> {
 
 // Storage types
 export interface UploadResponse {
-  message: string;
-  result: string;
+  success: boolean;
+  data: {
+    Name: string;
+    Size: number;
+    cid: string;
+    url: string;
+  };
 }
 
 export interface StorageFile {

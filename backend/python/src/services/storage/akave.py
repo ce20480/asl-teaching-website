@@ -1,87 +1,52 @@
 from .base import StorageProvider
-import os
-import subprocess
-from typing import Optional, BinaryIO
-from pathlib import Path
-from tempfile import NamedTemporaryFile
+import httpx
+from typing import BinaryIO
 
 class AkaveStorageService(StorageProvider):
     def __init__(self, private_key: str, node_address: str, default_bucket: str):
-        # if Path(private_key_path).is_file():
-        #     self.private_key = self._load_private_key(private_key_path)
-        self.private_key = private_key
+        self.private_key = private_key  # This will be the hex format with 0x prefix
         self.node_address = node_address
         self.default_bucket = default_bucket
-        self._ensure_bucket_exists()
+        self.akave_url = "http://akavelink:3000"  # Docker service name
 
-    def _load_private_key(self, key_path: str) -> str:
-        path = os.path.expanduser(key_path)
-        with open(path, 'r') as f:
-            return f.read().strip()
-
-    def _run_command(self, command: str) -> tuple[str, str]:
-        process = subprocess.Popen(
-            command,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
-        stdout, stderr = process.communicate()
-        if process.returncode != 0:
-            raise Exception(f"Command failed: {stderr}")
-        return stdout, stderr
-
-    def _ensure_bucket_exists(self):
-        try:
-            self._run_command(
-                f'akavecli ipc bucket create {self.default_bucket} '
-                f'--node-address={self.node_address} '
-                f'--private-key "{self.private_key}"'
-            )
-        except Exception as e:
-            if "already exists" not in str(e):
-                raise e
-
-    async def create_bucket(self, bucket_name: str) -> str:
-        command = (
-            f'akavecli ipc bucket create {bucket_name} '
-            f'--node-address={self.node_address} '
-            f'--private-key "{self.private_key}"'
-        )
-        stdout, _ = self._run_command(command)
-        return stdout
-
-    async def upload_file(self, bucket_name: str, file_data: BinaryIO, file_name: str) -> str:
-        with NamedTemporaryFile(delete=False) as temp_file:
-            temp_file.write(file_data.read())
-            temp_file.flush()
+    async def upload_file(self, bucket_name: str, file_data: BinaryIO, file_name: str) -> dict:
+        async with httpx.AsyncClient() as client:
+            files = {"file": (file_name, file_data)}
+            headers = {"Authorization": f"Bearer {self.private_key}"}
             
-            try:
-                command = (
-                    f'akavecli ipc file upload {bucket_name} {temp_file.name} '
-                    f'--node-address={self.node_address} '
-                    f'--private-key "{self.private_key}"'
-                )
-                stdout, _ = self._run_command(command)
-                return stdout
-            finally:
-                os.unlink(temp_file.name)
+            response = await client.post(
+                f"{self.akave_url}/api/v1/upload",
+                files=files,
+                headers=headers
+            )
+            result = response.json()
+            
+            return {
+                "success": True,
+                "data": {
+                    "Name": file_name,
+                    "Size": len(file_data.read()),
+                    "cid": result["cid"],
+                    "url": f"https://akave.ai/ipfs/{result['cid']}"
+                }
+            }
 
     async def download_file(self, bucket_name: str, file_name: str, destination: str) -> str:
-        command = (
-            f'akavecli ipc file download {bucket_name} {file_name} {destination} '
-            f'--node-address={self.node_address} '
-            f'--private-key "{self.private_key}"'
-        )
-        stdout, _ = self._run_command(command)
-        return stdout
+        async with httpx.AsyncClient() as client:
+            headers = {"Authorization": f"Bearer {self.private_key}"}
+            response = await client.get(
+                f"{self.akave_url}/api/v1/download/{file_name}",
+                headers=headers
+            )
+            with open(destination, 'wb') as f:
+                f.write(response.content)
+            return destination
 
     async def list_files(self, bucket_name: str) -> str:
-        command = (
-            f'akavecli ipc file list {bucket_name} '
-            f'--node-address={self.node_address} '
-            f'--private-key "{self.private_key}"'
-        )
-        stdout, _ = self._run_command(command)
-        return stdout
+        async with httpx.AsyncClient() as client:
+            headers = {"Authorization": f"Bearer {self.private_key}"}
+            response = await client.get(
+                f"{self.akave_url}/api/v1/files",
+                headers=headers
+            )
+            return response.json()

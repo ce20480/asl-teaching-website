@@ -52,3 +52,9 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Python
+backend/python/.env
+
+# Trouble shooting
+RM-trouble.md

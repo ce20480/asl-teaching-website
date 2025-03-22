@@ -8,6 +8,7 @@ load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
 class Settings(BaseSettings):
     WEB3_PRIVATE_KEY: str
+    AUTH_PRIVATE_KEY: str
     NODE_ADDRESS: str = "connect.akave.ai:5500"
     DEFAULT_BUCKET: str = "asl-training-data"
     

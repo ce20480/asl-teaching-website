@@ -1,6 +1,5 @@
 import express from "express";
 import multer from "multer";
-import { config } from "@/config";
 import axios from "axios";
 import FormData from "form-data";
 
@@ -12,13 +11,106 @@ const upload = multer({
   },
 });
 
+// Create bucket
+router.post("/buckets", async (req, res) => {
+  try {
+    const { bucketName } = req.body;
+    const response = await axios.post(
+      `${process.env.PYTHON_API_URL}/api/storage/buckets`,
+      { bucketName }
+    );
+    res.json(response.data);
+  } catch (error: any) {
+    console.error("Create bucket error:", error.response?.data || error);
+    res.status(error.response?.status || 500).json({
+      success: false,
+      error: error.response?.data?.detail || "Failed to create bucket"
+    });
+  }
+});
+
+// List buckets
+router.get("/buckets", async (req, res) => {
+  try {
+    const response = await axios.get(
+      `${process.env.PYTHON_API_URL}/api/storage/buckets`
+    );
+    res.json(response.data);
+  } catch (error: any) {
+    console.error("List buckets error:", error.response?.data || error);
+    res.status(error.response?.status || 500).json({
+      success: false,
+      error: error.response?.data?.detail || "Failed to list buckets"
+    });
+  }
+});
+
+// Get bucket details
+router.get("/buckets/:bucketName", async (req, res) => {
+  try {
+    const { bucketName } = req.params;
+    const response = await axios.get(
+      `${process.env.PYTHON_API_URL}/api/storage/buckets/${bucketName}`
+    );
+    res.json(response.data);
+  } catch (error: any) {
+    console.error("Get bucket error:", error.response?.data || error);
+    res.status(error.response?.status || 500).json({
+      success: false,
+      error: error.response?.data?.detail || "Failed to get bucket details"
+    });
+  }
+});
+
+// List files in bucket
+router.get("/buckets/:bucketName/files", async (req, res) => {
+  try {
+    const { bucketName } = req.params;
+    const response = await axios.get(
+      `${process.env.PYTHON_API_URL}/api/storage/buckets/${bucketName}/files`
+    );
+    res.json(response.data);
+  } catch (error: any) {
+    console.error("List files error:", error.response?.data || error);
+    res.status(error.response?.status || 500).json({
+      success: false,
+      error: error.response?.data?.detail || "Failed to list files"
+    });
+  }
+});
+
+// Download file from bucket
+router.get("/buckets/:bucketName/files/:fileName/download", async (req, res) => {
+  try {
+    const { bucketName, fileName } = req.params;
+    const response = await axios.get(
+      `${process.env.PYTHON_API_URL}/api/storage/buckets/${bucketName}/files/${fileName}/download`,
+      { responseType: 'stream' }
+    );
+
+    // Set headers for file download
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+    // Pipe the file stream to the response
+    response.data.pipe(res);
+  } catch (error: any) {
+    console.error("Download error:", error.response?.data || error);
+    res.status(error.response?.status || 500).json({
+      success: false,
+      error: error.response?.data?.detail || "Failed to download file"
+    });
+  }
+});
+
 router.post("/upload", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: "No file provided" });
+      return res.status(400).json({ 
+        success: false,
+        error: "No file provided" 
+      });
     }
-
-    console.log("Received file:", req.file.originalname);
 
     const formData = new FormData();
     formData.append("file", req.file.buffer, {
@@ -26,13 +118,8 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       contentType: req.file.mimetype,
     });
 
-    console.log(
-      "Forwarding to Python backend:",
-      `${config.pythonApiUrl}/api/storage/upload`
-    );
-
     const response = await axios.post(
-      `${config.pythonApiUrl}/api/storage/upload`,
+      `${process.env.PYTHON_API_URL}/api/storage/upload`,
       formData,
       {
         headers: {
@@ -43,12 +130,12 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       }
     );
 
-    console.log("Python response:", response.data);
     res.json(response.data);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Upload error:", error.response?.data || error);
     res.status(error.response?.status || 500).json({
-      message: error.response?.data?.detail || "Failed to upload file",
+      success: false,
+      error: error.response?.data?.detail || "Failed to upload file"
     });
   }
 });
