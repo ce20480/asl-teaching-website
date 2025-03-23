@@ -10,32 +10,6 @@ export const storageService = {
       const formData = new FormData();
       formData.append("file", file);
 
-      const xhr = new XMLHttpRequest();
-      
-      const uploadPromise = new Promise<UploadResponse>((resolve, reject) => {
-        xhr.upload.addEventListener('progress', (event) => {
-          if (event.lengthComputable && onProgress) {
-            const progress = (event.loaded / event.total) * 100;
-            onProgress(progress);
-          }
-        });
-
-        xhr.addEventListener('load', () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve(JSON.parse(xhr.responseText));
-          } else {
-            reject(new ApiError(xhr.status, xhr.responseText));
-          }
-        });
-
-        xhr.addEventListener('error', () => {
-          reject(new ApiError(500, "Failed to upload file"));
-        });
-
-        xhr.open('POST', `${API_BASE_URL}/storage/upload`);
-        xhr.send(formData);
-      });
-
       return uploadPromise;
     } catch (error) {
       console.error("Storage service upload error:", error);
