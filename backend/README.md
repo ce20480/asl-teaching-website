@@ -133,3 +133,63 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Thanks to all contributors who have helped with the development
 - Shadcn UI for the component library
 - React and FastAPI communities for excellent documentation
+
+Python FastAPI backend with Akave storage integration for ASL teaching platform.
+
+Prerequisites
+Python 3.11+
+Poetry
+Docker Desktop
+Akave API credentials
+Environment Setup
+
+Create .env file:
+
+```
+WEB3_PRIVATE_KEY=your_private_key_here
+NODE_ADDRESS=connect.akave.ai:5500
+DEFAULT_BUCKET=asl-training-data
+```
+
+Install dependencies:
+
+Running Services
+
+1. Start Akave Docker Container
+   The backend requires Akave Link container running on port 4000:
+
+2. Start FastAPI Server
+   API Endpoints
+   Storage Routes
+   All routes are prefixed with /api/storage
+
+Upload File
+Example:
+
+Response:
+
+List Files
+Example:
+
+Project Structure
+Common Issues
+Port Conflicts
+If you see multiple servers on port 8000:
+
+Docker Container
+Verify Akave container is running:
+
+File Upload Issues
+Ensure file size > 127 bytes
+Check Akave container logs:
+Testing
+Service Ports
+FastAPI: 8000
+Akave Link: 4000
+Express Middleware: 3000 (if used)
+Frontend Dev Server: 5173/5174
+Development Notes
+Auto-reload is enabled in dev mode
+Two processes are normal with auto-reload (watcher + application)
+SDK uses async context managers for proper resource cleanup
+CORS is configured for local development
