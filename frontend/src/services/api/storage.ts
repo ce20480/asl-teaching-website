@@ -10,7 +10,13 @@ export const storageService = {
       const formData = new FormData();
       formData.append("file", file);
 
-      return uploadPromise;
+      const response = await fetch(`${API_BASE_URL}/storage/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      return handleApiResponse<UploadResponse>(response);
+      
     } catch (error) {
       console.error("Storage service upload error:", error);
       if (error instanceof ApiError) {
