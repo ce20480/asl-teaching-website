@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from src.api.routes.health import router as health_router
 from src.api.routes.storage import storage_router
 
 app = FastAPI()
@@ -17,6 +18,7 @@ app.add_middleware(
 )
 
 # Mount routes
+app.include_router(health_router)
 app.include_router(storage_router)
 
 @app.get("/health")

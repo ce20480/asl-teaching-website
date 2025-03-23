@@ -3,8 +3,14 @@ import httpx
 from typing import BinaryIO
 
 class AkaveStorageService(StorageProvider):
-    def __init__(self, private_key: str, node_address: str, default_bucket: str):
-        self.private_key = private_key  # This will be the hex format with 0x prefix
+    def __init__(self, private_key, node_address: str, default_bucket: str):
+        # Method 3: Format key in service class
+        if isinstance(private_key, str):
+            if not private_key.startswith('0x'):
+                private_key = f'0x{private_key}'
+            if not all(c in '0123456789abcdefABCDEF' for c in private_key[2:]):
+                raise ValueError('Private key must be a hex string')
+        self.private_key = private_key
         self.node_address = node_address
         self.default_bucket = default_bucket
         self.akave_url = "http://akavelink:3000"  # Docker service name

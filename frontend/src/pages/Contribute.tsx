@@ -29,14 +29,21 @@ export default function Contribute() {
       setIsUploading(true);
       setUploadProgress(0);
 
+      console.log('Starting upload for file:', {
+        name: selectedFile.name,
+        size: selectedFile.size,
+        type: selectedFile.type
+      });
+
       const result = await storageService.uploadFile(
         selectedFile,
         (progress) => {
+          console.log('Upload progress:', progress);
           setUploadProgress(progress);
         }
       );
 
-      console.log("Upload successful:", result);
+      console.log('Upload response:', result);
       toast.success(`File uploaded successfully! Available at ${result.data.url}`);
       setSelectedFile(null);
     } catch (error) {

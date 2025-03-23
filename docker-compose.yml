@@ -6,7 +6,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - PYTHON_API=http://python:8000
+      - PYTHON_API_URL=http://python:8000
     depends_on:
       - python
       - akavelink
@@ -17,8 +17,8 @@ services:
       - "8000:8000"
     environment:
       - NODE_ADDRESS=connect.akave.ai:5500
-      - WEB3_PRIVATE_KEY=Buffer.from(${PRIVATE_KEY}, 'hex')
-      - AUTH_PRIVATE_KEY=Buffer.from(${PRIVATE_KEY}, 'hex')
+      - WEB3_PRIVATE_KEY=${PRIVATE_KEY}
+      - AUTH_PRIVATE_KEY=${PRIVATE_KEY}
     volumes:
       - ~/.key:/keys
     depends_on:
@@ -30,5 +30,17 @@ services:
       - "8080:3000"
     environment:
       - NODE_ADDRESS=connect.akave.ai:5500
-      - WEB3_PRIVATE_KEY=Buffer.from(${PRIVATE_KEY}, 'hex')
-      - AUTH_PRIVATE_KEY=Buffer.from(${PRIVATE_KEY}, 'hex')
+      - PRIVATE_KEY=${HEX_PRIVATE_KEY}
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3000  # Express server URL
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - express
+      - python
