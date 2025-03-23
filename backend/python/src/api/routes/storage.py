@@ -5,6 +5,11 @@ import aiohttp
 from .base import BaseRouter
 from ...core.config import settings
 from ...services.storage.akave_sdk import AkaveSDK, AkaveConfig, AkaveError
+from pydantic import BaseModel
+
+# Create a model for the request body
+class BucketCreate(BaseModel):
+    bucket_name: str
 
 class StorageRouter(BaseRouter):
     def __init__(self):
@@ -84,6 +89,41 @@ class StorageRouter(BaseRouter):
                 raise HTTPException(
                     status_code=500,
                     detail=f"Failed to list files: {str(e)}"
+                )
+
+        @self.router.post("/buckets")
+        async def create_bucket(bucket_request: BucketCreate) -> Dict[str, Any]:
+            """
+            Create a new storage bucket on Akave/Filecoin.
+            """
+            try:
+                # Initialize Akave SDK with proper configuration
+                akave_config = AkaveConfig(host="http://localhost:4000")
+                akave_sdk = AkaveSDK(akave_config)
+
+                async with akave_sdk as client:
+                    result = await client.create_bucket(bucket_request.bucket_name)
+
+                    return {
+                        "success": True,
+                        "message": "Bucket created successfully",
+                        "data": {
+                            "bucket_name": bucket_request.bucket_name,
+                            "details": result
+                        }
+                    }
+
+            except AkaveError as e:
+                print(f"Akave error: {str(e)}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Storage error: {str(e)}"
+                )
+            except Exception as e:
+                print(f"Bucket creation error: {str(e)}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Failed to create bucket: {str(e)}"
                 )
 
 # Create singleton instance
