@@ -19,6 +19,9 @@ httpx = "^0.25.1"
 pydantic = "^2.5.1"
 pydantic-settings = "^2.1.0"
 python-dotenv = "^1.0.1"
+aiohttp = "^3.11.14"
+pytest-asyncio = "^0.25.3"
+pytest-aiohttp = "^1.1.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
@@ -27,8 +30,15 @@ isort = "^5.13.2"
 
 [tool.poetry.scripts]
 dev = "scripts.dev:main"
+akave = "scripts.docker_manager:main"
 start = "uvicorn src.main:app"
+test = "pytest:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]

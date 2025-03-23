@@ -1,138 +1,133 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException, Response
-from typing import Dict, Any, List
-from datetime import datetime
+
+from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi.responses import JSONResponse
+from typing import Dict, Any
+import aiohttp
 from .base import BaseRouter
-from ...services.storage.akave import AkaveStorageService
 from ...core.config import settings
+from ...services.storage.akave_sdk import AkaveSDK, AkaveConfig, AkaveError
+from pydantic import BaseModel
+
+# Create a model for the request body
+class BucketCreate(BaseModel):
+    bucket_name: str
 
 class StorageRouter(BaseRouter):
     def __init__(self):
         # Initialize base class first
         super().__init__(prefix="/api/storage", tags=["storage"])
-        # Initialize service
-        self.akave = AkaveStorageService(
-            private_key=settings.AUTH_PRIVATE_KEY,
-            node_address=settings.NODE_ADDRESS,
-            default_bucket=settings.DEFAULT_BUCKET
-        )
+
         # Register routes after everything is set up
         self._register_routes()
 
     def _register_routes(self) -> None:
         """Register all storage routes"""
         
-        @self.router.post("/buckets")
-        async def create_bucket(bucket_name: str) -> Dict[str, Any]:
-            """Create a new bucket"""
+        @self.router.post("/upload")
+        async def upload_file(file: UploadFile = File(...)) -> Dict[str, Any]:
+            """
+            Upload a file to Akave storage.
+            Supports binary files (images, videos, etc.)
+            """
             try:
-                await self.akave.create_bucket(bucket_name)
-                return {
-                    "success": True,
-                    "data": {
-                        "Name": bucket_name,
-                        "Created": datetime.utcnow().isoformat()
-                    }
-                }
-            except Exception as e:
-                raise HTTPException(
-                    status_code=500,
-                    detail=str(e)
-                )
+                # Read file as bytes
+                contents = await file.read()
+                file_size = len(contents)
 
-        @self.router.get("/buckets")
-        async def list_buckets() -> Dict[str, Any]:
-            """List all buckets"""
-            try:
-                # Note: This is a placeholder as Akave might not support listing buckets
-                # You might need to maintain a list of buckets in your database
-                return {
-                    "success": True,
-                    "data": [
-                        {
-                            "Name": settings.DEFAULT_BUCKET,
-                            "Created": datetime.utcnow().isoformat()
-                        }
-                    ]
-                }
-            except Exception as e:
-                raise HTTPException(
-                    status_code=500,
-                    detail=str(e)
-                )
+                # Size validations
+                if file_size < 127:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="File size must be at least 127 bytes"
+                    )
+                if file_size > 100 * 1024 * 1024:  # 100MB
+                    raise HTTPException(
+                        status_code=400,
+                        detail="File size must not exceed 100MB"
+                    )
 
-        @self.router.get("/buckets/{bucket_name}")
-        async def get_bucket(bucket_name: str) -> Dict[str, Any]:
-            """Get bucket details"""
-            try:
-                # Note: This is a placeholder as Akave might not support getting bucket details
-                return {
-                    "success": True,
-                    "data": {
-                        "Name": bucket_name,
-                        "Created": datetime.utcnow().isoformat()
+                print(f"Processing file: {file.filename}, size: {file_size} bytes")
+                
+                # Initialize Akave SDK with proper configuration
+                akave_config = AkaveConfig(host="http://localhost:4000")  # Docker container port
+                akave_sdk = AkaveSDK(akave_config)
+
+                async with akave_sdk as client:  # Use initialized SDK
+                    result = await client.upload_file(
+                        bucket_name="asl-training-data",
+                        file_data=contents,
+                        file_name=file.filename
+                    )
+
+                    return {
+                        "message": "File uploaded successfully",
+                        "filename": file.filename,
+                        "size": file_size,
+                        "cid": result.get("cid", ""),
+                        "bucket": "asl-training-data",
+                        "contentType": file.content_type
                     }
-                }
-            except Exception as e:
+
+            except AkaveError as e:
+                print(f"Akave error: {str(e)}")
                 raise HTTPException(
                     status_code=500,
-                    detail=str(e)
+                    detail=f"Storage error: {str(e)}"
+                )
+            except Exception as e:
+                print(f"Upload error: {str(e)}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Upload failed: {str(e)}"
+
                 )
 
         @self.router.get("/buckets/{bucket_name}/files")
         async def list_files(bucket_name: str) -> Dict[str, Any]:
             """List files in a bucket"""
             try:
-                files = await self.akave.list_files(bucket_name)
-                return {
-                    "success": True,
-                    "data": files
-                }
+
+                files = await self.storage_service.list_files(settings.DEFAULT_BUCKET)
+                return {"files": files}
             except Exception as e:
                 raise HTTPException(
                     status_code=500,
-                    detail=str(e)
+                    detail=f"Failed to list files: {str(e)}"
                 )
 
-        @self.router.post("/upload")
-        async def upload_file(file: UploadFile = File(...)) -> Dict[str, Any]:
-            """Upload a file using default bucket"""
+        @self.router.post("/buckets")
+        async def create_bucket(bucket_request: BucketCreate) -> Dict[str, Any]:
+            """
+            Create a new storage bucket on Akave/Filecoin.
+            """
             try:
-                file_data = await file.read()
-                result = await self.akave.upload_file(
-                    bucket_name=self.akave.default_bucket,
-                    file_data=file_data,
-                    file_name=file.filename
-                )
-                return result
-            except Exception as e:
-                raise HTTPException(
-                    status_code=500,
-                    detail=str(e)
-                )
+                # Initialize Akave SDK with proper configuration
+                akave_config = AkaveConfig(host="http://localhost:4000")
+                akave_sdk = AkaveSDK(akave_config)
 
-        @self.router.get("/buckets/{bucket_name}/files/{file_name}/download")
-        async def download_file(
-            bucket_name: str,
-            file_name: str
-        ) -> Response:
-            """Download a file from a bucket"""
-            try:
-                # Create a temporary file to store the download
-                temp_path = f"/tmp/{file_name}"
-                await self.akave.download_file(bucket_name, file_name, temp_path)
-                
-                # Return the file as a download
-                return Response(
-                    content=open(temp_path, "rb").read(),
-                    media_type="application/octet-stream",
-                    headers={
-                        "Content-Disposition": f'attachment; filename="{file_name}"'
+                async with akave_sdk as client:
+                    result = await client.create_bucket(bucket_request.bucket_name)
+
+                    return {
+                        "success": True,
+                        "message": "Bucket created successfully",
+                        "data": {
+                            "bucket_name": bucket_request.bucket_name,
+                            "details": result
+                        }
                     }
-                )
-            except Exception as e:
+
+            except AkaveError as e:
+                print(f"Akave error: {str(e)}")
                 raise HTTPException(
                     status_code=500,
-                    detail=str(e)
+                    detail=f"Storage error: {str(e)}"
+                )
+            except Exception as e:
+                print(f"Bucket creation error: {str(e)}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Failed to create bucket: {str(e)}"
                 )
 
 # Create singleton instance

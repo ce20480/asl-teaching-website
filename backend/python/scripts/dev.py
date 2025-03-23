@@ -4,31 +4,35 @@ import sys
 import socket
 
 def is_port_in_use(port: int) -> bool:
-    """Check if port is in use using socket."""
+    """Check if port is already in use"""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
+            # Try to bind to the port
             s.bind(('127.0.0.1', port))
             return False
         except socket.error:
             return True
 
 def main():
-    """Development server entry point."""
+    """Development server entry point"""
     PORT = 8000
     
+    # Check if port is already in use
     if is_port_in_use(PORT):
-        print(f"\nPort {PORT} is already in use.")
+        print(f"\nPort {PORT} is already in use!")
         print("Please stop any running servers and try again.")
         sys.exit(1)
     
-    print(f"\nStarting FastAPI server on port {PORT}...")
+    print(f"\nStarting FastAPI server on port {PORT} with auto-reload enabled...")
     
     try:
         uvicorn.run(
             "src.main:app",
             host="127.0.0.1",
             port=PORT,
-            reload=True,
+            reload=True,  # Enable auto-reload for development
+            reload_dirs=["src"],  # Only watch the src directory
+            workers=1,  # Use single worker to avoid port conflicts
             log_level="info"
         )
     except KeyboardInterrupt:
