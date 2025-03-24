@@ -45,6 +45,7 @@
     "express-rate-limit": "^7.5.0",
     "form-data": "^4.0.2",
     "multer": "^1.4.5-lts.1",
-    "ts-node-dev": "^2.0.0"
+    "ts-node-dev": "^2.0.0",
+    "@web3-storage/w3up-client": "^13.0.0"
   }
 }

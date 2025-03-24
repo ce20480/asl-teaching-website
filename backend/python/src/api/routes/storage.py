@@ -79,7 +79,6 @@ class StorageRouter(BaseRouter):
                 raise HTTPException(
                     status_code=500,
                     detail=f"Upload failed: {str(e)}"
-
                 )
 
         @self.router.get("/buckets/{bucket_name}/files")
