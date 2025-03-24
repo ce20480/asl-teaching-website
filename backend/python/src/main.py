@@ -19,6 +19,7 @@ app.add_middleware(
 )
 
 # Mount routes
+app.include_router(health_router)
 app.include_router(storage_router)
 
 @app.get("/health")

@@ -7,9 +7,9 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
 class Settings(BaseSettings):
-    WEB3_PRIVATE_KEY: str
     NODE_ADDRESS: str = "connect.akave.ai:5500"
     DEFAULT_BUCKET: str = "asl-training-data"
+    AUTH_PRIVATE_KEY: str
     
     class Config:
         env_file = Path(__file__).parent.parent.parent / ".env"

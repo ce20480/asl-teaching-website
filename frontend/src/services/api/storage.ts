@@ -16,6 +16,7 @@ export const storageService = {
       });
 
       return handleApiResponse<UploadResponse>(response);
+      
     } catch (error) {
       console.error("Storage service upload error:", error);
       if (error instanceof ApiError) {
